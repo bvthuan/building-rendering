@@ -1820,6 +1820,24 @@ class FrontEnd {
 				}
 			}
 
+            let clearPreviousHoveredSelection = function () {
+                if (THAT.previousHoveredEntryIndex < 0) {
+                    return;
+                }
+
+                if (THAT.Model.elevations["north"].activeAreaData) {
+
+                    let selectedMeshName = THAT.Model.elevations["north"].activeAreaData.mesh_name;
+
+                    if (!meshes[THAT.previousHoveredEntryIndex].name.includes(selectedMeshName)) {
+                        meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
+                    }
+                    
+                } else {
+                    meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
+                }
+            }
+
             let onMouseMove = function (evt) {
                 if (THAT.searchFlag) return;
 
@@ -1844,8 +1862,8 @@ class FrontEnd {
                     meshAreaHovered = true;
 
                     if (pickInfo.hit && (pickInfo.pickedMesh.name.substr(0, 7) == "glasses" ||
-                                        pickInfo.pickedMesh.name.substr(-5) == "coridor" ||
-                                        pickInfo.pickedMesh.name.substr(-13) == "balkony_glass")) {
+                        pickInfo.pickedMesh.name.substr(-5) == "coridor" ||
+                        pickInfo.pickedMesh.name.substr(-13) == "balkony_glass")) {
                         isMesh = true
                         mesh_str = p_mesh.name.split("_")
 
@@ -1864,25 +1882,9 @@ class FrontEnd {
                 }
 
                 if (!meshAreaHovered) {
-                    if (!THAT.previousHoveredEntry) {
-                        return;
-                    }
-
-                    if (THAT.Model.elevations["north"].activeAreaData) {
-
-                        let selectedMeshName = THAT.Model.elevations["north"].activeAreaData.mesh_name;
-
-                        if (!meshes[THAT.previousHoveredEntryIndex].name.includes(selectedMeshName)) {
-                            meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
-                        }
-
-                    } else {
-                        meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
-                    }
-
+                    clearPreviousHoveredSelection()
                     THAT.previousHoveredEntryIndex = -1
                     THAT.previousHoveredEntry = null
-
                     return;
                 }
 
@@ -1896,7 +1898,6 @@ class FrontEnd {
                 }
 
                 if (THAT.Model.elevations["north"].activeAreaData) {
-
                     let selectedMeshName = THAT.Model.elevations["north"].activeAreaData.mesh_name;
 
                     if (selected_balkony == selectedMeshName) {
@@ -1904,23 +1905,20 @@ class FrontEnd {
                     }
                 }
 
-
-                let selected_item = 0
-                let highlight = selected_balkony + "_walls"
                 let highLightWindow = "glasses_" + selected_balkony
                 let selectedEntryIndex = -1;
 
-
                 for (let index = 0; index < meshes.length; index++) {
 
-                    //---------------------------------------------------------------------manual property click----------------------------------------
                     if (highLightWindow == meshes[index].name) {
-                        var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene)
-                        myMaterial.emissiveColor = new BABYLON.Color3(0.00, 0.18, 0.00)
-                        myMaterial.environmentIntensity = 0.1
-                        myMaterial.alpha = 0.8
 
                         if (THAT.tileData[selected_balkony]) {
+                            var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene)
+                            myMaterial.emissiveColor = new BABYLON.Color3(0.00, 0.18, 0.00)
+                            myMaterial.environmentIntensity = 0.1
+                            myMaterial.alpha = 0.8
+
+                            THAT.tileData[selected_balkony].RENDERATOR.dataEntry.orientation = "north"
                             if (THAT.tileData[selected_balkony].RENDERATOR.dataEntry.availability == "false") {
                                 myMaterial.diffuseColor = new BABYLON.Color3(1, 51 / 255, 15 / 255)
                                 myMaterial.specularColor = new BABYLON.Color3(1, 51 / 255, 45 / 255)
@@ -1933,45 +1931,21 @@ class FrontEnd {
                                 myMaterial.diffuseColor = new BABYLON.Color3(51 / 255, 51 / 255, 1)
                                 myMaterial.specularColor = new BABYLON.Color3(51 / 255, 51 / 255, 1)
                                 myMaterial.emissiveColor = new BABYLON.Color3(51 / 255, 51 / 255, 1)
-                            }
+							}
+							
+							myMaterial.ambientColor = new BABYLON.Color3(0.23, 0.98, 0.53)
+							meshes[index].visibility = 1
+							meshes[index].material = myMaterial
+							selectedEntryIndex = index;
 
+							break;
                         }
 
-                        myMaterial.ambientColor = new BABYLON.Color3(0.23, 0.98, 0.53)
-                        meshes[index].visibility = 1
-                        meshes[index].material = myMaterial
-                        selectedEntryIndex = index;
-
-                        break;
+                        
                     }
                 }
 
-
-                if (THAT.tileData[selected_balkony] == undefined) return
-
-                if (THAT.previousHoveredEntryIndex > 0) {
-
-                    if (THAT.Model.elevations["north"].activeAreaData) {
-
-                        let selectedMeshName = THAT.Model.elevations["north"].activeAreaData.mesh_name;
-
-                        if (!meshes[THAT.previousHoveredEntryIndex].name.includes(selectedMeshName)) {
-                            meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
-                        }
-
-                    } else {
-
-                        meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
-                    }
-                }
-
-                if (THAT.tileData[selected_balkony].RENDERATOR.dataEntry.availability == true) {
-                    meshes[selected_item].material.diffuseColor = new BABYLON.Color3(0, 0, 91 / 255)
-                } else {
-                    meshes[selected_item].material.diffuseColor = new BABYLON.Color3(250 / 255, 50 / 255, 50 / 255)
-                }
-
-                THAT.tileData[selected_balkony].RENDERATOR.dataEntry.orientation = "north"
+                clearPreviousHoveredSelection();
 
                 THAT.previousHoveredEntryIndex = selectedEntryIndex;
                 THAT.previousHoveredEntry = selected_balkony;
