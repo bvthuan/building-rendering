@@ -1829,7 +1829,7 @@ class FrontEnd {
 
                     let selectedMeshName = THAT.Model.elevations["north"].activeAreaData.mesh_name;
 
-                    if (!meshes[THAT.previousHoveredEntryIndex].name.includes(selectedMeshName)) {
+                    if (!meshes[THAT.previousHoveredEntryIndex].name.includes("glasses_" + selectedMeshName)) {
                         meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
                     }
                     
