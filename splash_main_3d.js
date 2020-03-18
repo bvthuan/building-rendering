@@ -108,6 +108,8 @@ class FrontEnd {
 		this.sunlight = 1
 		this.isFirst = true
 		this.cameraRadius = 150
+		this.previousHoveredEntry = ""
+		this.previousHoveredEntryIndex = -1
 	}
 
 	updatePersonalizationSplash(onSplashBackgroundReady) {
@@ -1818,15 +1820,180 @@ class FrontEnd {
 				}
 			}
 
+            let onMouseMove = function (evt) {
+                if (THAT.searchFlag) return;
+
+                let canvas_panel = THAT.Model.elevations["north"].elevationCanvas
+                let p_mesh = []
+                let tolerence = 1
+                let isMesh = false
+                let pickInfo = []
+                let selected_balkony = ""
+                let meshAreaHovered = false;
+
+                for (let i = 0; i < 5; i++) {
+                    pickInfo = scene.pick(scene.pointerX + tolerence * Math.cos((0.3 * Math.PI * i) / 5),
+                        scene.pointerY + tolerence * Math.sin((0.3 * Math.PI * i) / 5),
+                        function (mesh) {
+                            return mesh !== []
+                        })
+                    p_mesh = pickInfo.pickedMesh
+                    if (p_mesh == undefined) {
+                        continue
+                    }
+
+                    meshAreaHovered = true;
+
+                    if (pickInfo.hit && (pickInfo.pickedMesh.name.substr(0, 7) == "glasses" ||
+                                        pickInfo.pickedMesh.name.substr(-5) == "coridor" ||
+                                        pickInfo.pickedMesh.name.substr(-13) == "balkony_glass")) {
+                        isMesh = true
+                        mesh_str = p_mesh.name.split("_")
+
+                        if (pickInfo.pickedMesh.name.substr(0, 7) == "glasses") {
+                            selected_balkony = mesh_str[1]
+                        } else if (pickInfo.pickedMesh.name.substr(-5) == "walls") {
+                            selected_balkony = p_mesh.name.substr(0, p_mesh.name.length - 6)
+                        } else if (pickInfo.pickedMesh.name.substr(-13) == "balkony_glass") {
+                            selected_balkony = p_mesh.name.substr(0, p_mesh.name.length - 14)
+                        } else {
+                        }
+
+                        break
+                    } else {
+                    }
+                }
+
+                if (!meshAreaHovered) {
+                    if (!THAT.previousHoveredEntry) {
+                        return;
+                    }
+
+                    if (THAT.Model.elevations["north"].activeAreaData) {
+
+                        let selectedMeshName = THAT.Model.elevations["north"].activeAreaData.mesh_name;
+
+                        if (!meshes[THAT.previousHoveredEntryIndex].name.includes(selectedMeshName)) {
+                            meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
+                        }
+
+                    } else {
+                        meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
+                    }
+
+                    THAT.previousHoveredEntryIndex = -1
+                    THAT.previousHoveredEntry = null
+
+                    return;
+                }
+
+                if (THAT.previousHoveredEntry == selected_balkony) {
+                    return
+                }
+
+                if (isMesh) {
+                } else {
+                    return
+                }
+
+                if (THAT.Model.elevations["north"].activeAreaData) {
+
+                    let selectedMeshName = THAT.Model.elevations["north"].activeAreaData.mesh_name;
+
+                    if (selected_balkony == selectedMeshName) {
+                        return
+                    }
+                }
+
+
+                let selected_item = 0
+                let highlight = selected_balkony + "_walls"
+                let highLightWindow = "glasses_" + selected_balkony
+                let selectedEntryIndex = -1;
+
+
+                for (let index = 0; index < meshes.length; index++) {
+
+                    //---------------------------------------------------------------------manual property click----------------------------------------
+                    if (highLightWindow == meshes[index].name) {
+                        var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene)
+                        myMaterial.emissiveColor = new BABYLON.Color3(0.00, 0.18, 0.00)
+                        myMaterial.environmentIntensity = 0.1
+                        myMaterial.alpha = 0.8
+
+                        if (THAT.tileData[selected_balkony]) {
+                            if (THAT.tileData[selected_balkony].RENDERATOR.dataEntry.availability == "false") {
+                                myMaterial.diffuseColor = new BABYLON.Color3(1, 51 / 255, 15 / 255)
+                                myMaterial.specularColor = new BABYLON.Color3(1, 51 / 255, 45 / 255)
+                                myMaterial.emissiveColor = new BABYLON.Color3(1, 51 / 255, 45 / 255)
+                            } else if (THAT.tileData[selected_balkony].RENDERATOR.dataEntry.areaType == "commercial") {
+                                myMaterial.diffuseColor = new BABYLON.Color3(1, 91 / 255, 55 / 255)
+                                myMaterial.specularColor = new BABYLON.Color3(1, 91 / 255, 95 / 255)
+                                myMaterial.emissiveColor = new BABYLON.Color3(1, 91 / 255, 95 / 255)
+                            } else if (THAT.tileData[selected_balkony].RENDERATOR.dataEntry.areaType == "common") {
+                                myMaterial.diffuseColor = new BABYLON.Color3(51 / 255, 51 / 255, 1)
+                                myMaterial.specularColor = new BABYLON.Color3(51 / 255, 51 / 255, 1)
+                                myMaterial.emissiveColor = new BABYLON.Color3(51 / 255, 51 / 255, 1)
+                            }
+
+                        }
+
+                        myMaterial.ambientColor = new BABYLON.Color3(0.23, 0.98, 0.53)
+                        meshes[index].visibility = 1
+                        meshes[index].material = myMaterial
+                        selectedEntryIndex = index;
+
+                        break;
+                    }
+                }
+
+
+                if (THAT.tileData[selected_balkony] == undefined) return
+
+                if (THAT.previousHoveredEntryIndex > 0) {
+
+                    if (THAT.Model.elevations["north"].activeAreaData) {
+
+                        let selectedMeshName = THAT.Model.elevations["north"].activeAreaData.mesh_name;
+
+                        if (!meshes[THAT.previousHoveredEntryIndex].name.includes(selectedMeshName)) {
+                            meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
+                        }
+
+                    } else {
+
+                        meshes[THAT.previousHoveredEntryIndex].material = meshe_materials[THAT.previousHoveredEntryIndex]
+                    }
+                }
+
+                if (THAT.tileData[selected_balkony].RENDERATOR.dataEntry.availability == true) {
+                    meshes[selected_item].material.diffuseColor = new BABYLON.Color3(0, 0, 91 / 255)
+                } else {
+                    meshes[selected_item].material.diffuseColor = new BABYLON.Color3(250 / 255, 50 / 255, 50 / 255)
+                }
+
+                THAT.tileData[selected_balkony].RENDERATOR.dataEntry.orientation = "north"
+
+                THAT.previousHoveredEntryIndex = selectedEntryIndex;
+                THAT.previousHoveredEntry = selected_balkony;
+
+                if (startingPoint) {
+                    startingPoint = null
+                    return
+                }
+            }
+
 			let eventCanvas = engine.getRenderingCanvas()
 			eventCanvas.addEventListener("pointerdown", onPointerDown, false)
 			eventCanvas.addEventListener("pointermove", onPointerMove, false)
 			eventCanvas.addEventListener("pointerup", onPointerUp, false)
+			eventCanvas.addEventListener("mousemove", onMouseMove, false)
 
 			scene.onDispose = function() {
 				eventCanvas.removeEventListener("pointerdown", onPointerDown)
 				eventCanvas.removeEventListener("pointermove", onPointerMove)
 				eventCanvas.removeEventListener("pointerup", onPointerUp)
+                eventCanvas.removeEventListener("mousemove", onMouseMove)
 			}
 			return scene
 		}
