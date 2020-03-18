@@ -1823,7 +1823,6 @@ class FrontEnd {
             let onMouseMove = function (evt) {
                 if (THAT.searchFlag) return;
 
-                let canvas_panel = THAT.Model.elevations["north"].elevationCanvas
                 let p_mesh = []
                 let tolerence = 1
                 let isMesh = false
